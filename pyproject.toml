@@ -1,0 +1,24 @@
+[project]
+name = "joker-bot"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "SwairIT",email = "1q2w3e4r5t6y7u89o0pi@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "aiogram (>=3.20.0.post0,<4.0.0)",
+    "asyncsql (>=0.1.4,<0.2.0)",
+    "python-dotenv (>=1.1.0,<2.0.0)",
+    "pydantic (>=2.11.5,<3.0.0)",
+    "pydantic-settings (>=2.9.1,<3.0.0)"
+]
+
+[tool.poetry]
+packages = [{include = "joker_bot", from = "src"}]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

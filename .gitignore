@@ -1,0 +1,13 @@
+*.tmp
+*.log
+.idea/
+.env
+build/
+out/
+__pycache__/
+venv/
+.venv/
+*.py[cod]
+.vscode/
+*.db
+my_base.db
