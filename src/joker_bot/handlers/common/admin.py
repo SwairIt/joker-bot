@@ -1,5 +1,5 @@
 from aiogram import Router, types, F
-from aiogram.filters import CommandStart, Command, StateFilter
+from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from filters.chat_types import ChatTypeFilter, IsAdmin
 
-from database.orm_query import orm_get_random_joke, orm_get_jokes, orm_get_joke, orm_add_joke, orm_update_joke, orm_delete_joke
+from database.orm_query import orm_get_jokes, orm_get_joke, orm_add_joke, orm_update_joke, orm_delete_joke
 
 from kbds.reply import get_keyboard
 from kbds.inline import all_jokes_kbd
@@ -69,13 +69,15 @@ class AddJoke(StatesGroup):
     name = State()
     text = State()
     rating = State()
+    category = State()
 
     joke_for_change = None
 
     texts = {
         "AddJoke:name": "Введите название заново",
         "AddJoke:text": "Введите анекдот заново",
-        "AddJoke:rating": "Введите рейтинг заново"
+        "AddJoke:rating": "Введите рейтинг заново",
+        "AddJoke:category": "Выберите категорию заново"
     }
 
 
@@ -191,11 +193,11 @@ async def add_rating(message: types.Message, state: FSMContext, session: AsyncSe
         await state.clear()
     except Exception as e:
         await message.answer(f"Ошибка: \n{str(e)}\nОбратитесь к программеру")
-        await state.clear()# Хендлер для отлова некорректных вводов для состояния description
+        await state.clear()
 
-    AddJoke.joke_for_change = None
+    AddJoke.joke_for_change = None    
 
-
+        
 @router.message(AddJoke.rating)
 async def add_rating_2(message: types.Message, state: FSMContext):
     await message.answer("Введите число!")

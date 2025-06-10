@@ -9,7 +9,8 @@ async def orm_add_joke(session: AsyncSession, data: dict):
     obj = Joke(
         name=data["name"],
         text=data["text"],
-        rating=data["rating"]
+        rating=data["rating"],
+        category=data["category"]
     )
     session.add(obj)
     await session.commit()
@@ -40,7 +41,8 @@ async def orm_update_joke(session: AsyncSession, joke_id: int, data):
         .values(
             name=data["name"],
             text=data["text"],
-            rating=data["rating"]
+            rating=data["rating"],
+            category=data["category"]
         )
     )
     await session.execute(query)
