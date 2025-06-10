@@ -5,7 +5,8 @@ from aiogram.fsm.state import State, StatesGroup
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.orm_query import orm_get_random_joke, orm_get_jokes, orm_get_joke, orm_add_joke, orm_update_joke
+from database.orm_query import orm_get_random_joke, orm_get_jokes, orm_get_joke, orm_add_joke, orm_update_joke, orm_delete_joke
+from kbds.inline import all_jokes_kbd
 
 router = Router()
 
@@ -15,14 +16,38 @@ async def start_cmd(message: types.Message):
     await message.answer("Добро пожаловать в Анекдот Мастер")
 
 
-@router.message(Command("all_jokes"))
+@router.message(StateFilter(None), Command("all_jokes"))
 async def all_jokes_cmd(message: types.Message, session: AsyncSession):
+    try:
+        jokes = await orm_get_jokes(session)
+    except Exception as e:
+        await message.answer("Ошибка при получении анекдотов.")
+        return
+
+    if not jokes:
+        await message.answer("Анекдотов пока нет.")
+        return
+
     for joke in await orm_get_jokes(session):
-        await message.answer(f'<b>Название: {joke.name}</b>\n\n{joke.text}\nРейтинг: {joke.rating}')
+        await message.answer(
+            f'<b>Название: {joke.name}</b>\n\n{joke.text}\nРейтинг: {joke.rating}',
+            reply_markup=all_jokes_kbd(joke.id)
+        )
     await message.answer("Все анекдоты ⏫")
 
 
-############ FSM #########################
+@router.callback_query(StateFilter(None), F.data.startswith("delete_joke_"))
+async def delete_joke_cmd(callback: types.CallbackQuery, session: AsyncSession):
+    joke_id = int(callback.data.split('joke_')[-1])
+
+    await orm_delete_joke(session=session, joke_id=joke_id)
+
+    await callback.answer("Вы успешно удалили анекдот")
+    await callback.message.delete()
+
+
+
+############ FSM АДМИНКА #########################
 
 
 class AddJoke(StatesGroup):
@@ -49,6 +74,19 @@ async def add_cmd(message: types.Message, state: FSMContext, session: AsyncSessi
     AddJoke.joke_for_change = joke_for_change
 
     await message.answer("Введите название анекдота")
+    await state.set_state(AddJoke.name)
+
+
+@router.callback_query(StateFilter(None), F.data.startswith("update_joke_"))
+async def add_cmd(callback: types.Message, state: FSMContext, session: AsyncSession):
+    joke_id = int(callback.data.split("joke_")[-1])
+
+    joke_for_change = await orm_get_joke(session, int(joke_id))
+
+    AddJoke.joke_for_change = joke_for_change
+
+    await callback.answer("Вы изменяете анекдот")
+    await callback.message.answer("Введите название анекдота")
     await state.set_state(AddJoke.name)
 
 
@@ -106,8 +144,8 @@ async def add_name2(message: types.Message, state: FSMContext):
 
 @router.message(AddJoke.text, F.text)
 async def add_description(message: types.Message, state: FSMContext, session: AsyncSession):
-    if message.text == "." and AddJoke.product_for_change:
-        await state.update_data(text=AddJoke.product_for_change.text)
+    if message.text == "." and AddJoke.joke_for_change:
+        await state.update_data(text=AddJoke.joke_for_change.text)
     else:
         if 14 >= len(message.text) >= 250:
             await message.answer(
