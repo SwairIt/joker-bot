@@ -9,7 +9,7 @@ class Base(DeclarativeBase):
 class Joke(Base):
     __tablename__ = "jokes"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(50), nullable=False)
     text: Mapped[str] = mapped_column(String(250), nullable=False)
     rating: Mapped[float] = mapped_column(Float(precision=2), default=3.0)

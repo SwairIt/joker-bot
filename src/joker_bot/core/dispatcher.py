@@ -2,15 +2,18 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
-from config import settings
-
 from database.engine import session_maker
 
 from middlewares.db import DbSessionMiddleware
 
+from handlers.common.start import router as start_router
+from handlers.common.admin import router as admin_router
+from handlers.common.group import group_router
+
+from config import settings
+
 import logging
 
-from handlers.common.start import router as start_router
 
 
 logging.basicConfig(
@@ -25,5 +28,7 @@ bot = Bot(
     default=DefaultBotProperties(parse_mode=ParseMode.HTML)
 )
 
+bot.my_admins_list = []
+
 dp.update.middleware.register(DbSessionMiddleware(session_maker))
-dp.include_router(start_router)
+dp.include_routers(start_router, admin_router, group_router)
